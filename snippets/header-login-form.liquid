@@ -1,0 +1,27 @@
+{% if settings.login_box %}
+    <!-- Header Account -->
+    <div class="header-link dropdown-link header-account">
+        {% if customer %}
+            <a href="/account"><i class="icon icon-user"></i><span {% if header == 7 %}class="link-text"{% endif %}>{{ 'customer.account.title' | t }}</span></a>
+            <div class="dropdown-container right">
+                <a href="/account/logout" class="btn">{{ 'layout.customer.log_out' | t }}</a>
+            </div>
+        {% else %}
+            <a><i class="icon icon-user"></i>{% if header == 7 %}<span class="link-text">{{ 'general.theme.login' | t }}</span>{% endif %}</a>
+            <div class="dropdown-container right">
+                {% form 'customer_login' %}
+                <div class="title">{{ 'customer.login.registered_customers' | t }}</div>
+                <div class="top-text">{{ 'customer.login.if_have_title' | t }}</div>
+                <!-- form -->
+                <input type="email" class="form-control" name="customer[email]" placeholder="{{ 'customer.login.email' | t }}*">
+                <input type="password" class="form-control" name="customer[password]" placeholder="{{ 'customer.login.password' | t }}*">
+                <button type="submit" class="btn">{{ 'customer.login.sign_in' | t }}</button>
+                <!-- /form -->
+                <div class="title">{{ 'customer.login.or' | t }}</div>
+                <div class="bottom-text">{{ 'layout.customer.create_account' | t | customer_register_link }}</div>
+                {% endform %}
+            </div>
+        {% endif %}
+    </div>
+    <!-- /Header Account -->
+{% endif %}

@@ -1,0 +1,79 @@
+{% capture section_1 %}home_{{ settings.home_page }}_section_1{% endcapture %}
+{% if template == "index" or page contains 3 %}
+     {% if variant contains '3' %}
+         {% assign variant_header=variant %}
+     {% else %}
+         {% if settings[section_1] contains 'slider'%}
+             {% assign variant_header=1 %}
+         {% else  %}
+             {% assign variant_header=2 %}
+         {% endif %}
+     {% endif %}
+{% else  %}
+    {% assign variant_header=2 %}
+{% endif %}
+<header class="page-header {{ header_box }} variant-{{ variant_header }} {% unless template == 'index' and settings.home_page contains 3   %}{% unless page contains 3  %}{{ settings.sticky }} {{ settings.sticky_color }} {{ settings.sticky_behavior }} {% endunless %}{% endunless %} {{ dark }} {{ settings.sticky_style }}">
+ <!-- Header Top Row -->
+    <div class="header-top-row" style="background-color: #0ac7c7; height: 38px;/*margin-top: -8px;*/">
+        <div class="container">
+          
+            <div class="header-top-right">
+              
+               
+            <!-- Header Cart -->
+            {% include 'header-cart' %}
+            <!-- /Header Cart -->
+              
+                <!-- Header Links -->
+                <div class="header-links">
+
+                    <!-- Header Language -->
+                    {% include 'header-languages' %}
+                    <!-- /Header Language -->
+                    <!-- Header Currency -->
+                    {% include 'currency-picker' %}
+                    <!-- /Header Currency -->
+                   {% include 'header-login-form' %}
+
+                </div>
+                <!-- /Header Links -->
+            </div>
+        </div>
+    </div>
+    <!-- /Header Top Row edited by vivek-->
+  
+  
+  <div class="navbar">
+        <div class="container">
+            <!-- Menu Toggle -->
+            <div class="menu-toggle"><a href="#" class="mobilemenu-toggle"><i class="icon icon-menu"></i></a></div>
+            <!-- /Menu Toggle -->
+            <!-- Header Cart -->
+          {% comment %}
+          
+          {% include 'header-cart' %}
+            <!-- /Header Cart -->
+            <!-- Header Links -->
+            <div class="header-links">
+                {% include 'header-languages' %}
+                {% include 'currency-picker' %}
+                {% include 'header-login-form' %}
+            </div>
+          {% endcomment %}
+          
+            <!-- /Header Links -->
+            {% include 'header-search' %}
+            <!-- Logo -->
+            {% unless template == 'index' and settings.home_page contains 3   %}{% unless page contains 3  %}
+            <div class="header-logo">
+                {% include 'header-logo' %}
+            </div>
+            {% endunless %}{% endunless %}
+            <!-- /Logo -->
+            <!-- Mobile Menu -->
+            {% include 'mobile-nav' %}
+            <!-- /Mobile Menu -->
+            {% include 'megamenu-nav' %}
+        </div>
+    </div>
+</header>

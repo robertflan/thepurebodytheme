@@ -1,0 +1,205 @@
+<div class="product-options id_{{ product.id }} {{ product_options }} {% if product.options.size > 2 %}more-options{% endif %}">
+    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+    {% unless product.options.size == 1 and product.options.first == 'Title' %}
+    {% assign index = 0 %}
+    {% for option in product.options %}
+        {% assign option_names = '' %}
+        {% assign option_title = option | downcase %}
+        {% assign index = forloop.index0 %}
+        {% assign selected_value = '' %}
+        {% assign color_image = '' %}
+        {% for variant in product.variants %}
+            {% if variant.available %}
+                {% if variant == product.selected_or_first_available_variant %}
+                    {% assign selected_value = variant.options[index] %}
+                {% endif %}
+                {% assign img_url = variant.image.src |  img_url: '1024x1024' %}
+                {% assign option_names = option_names | append:variant.options[index] | append:'<>' %}
+                {% assign check_color_name = '!__!' | append:variant.options[index] | append:'!__!' %}
+                {% unless color_image contains check_color_name %}
+                {% assign color_image = color_image | append:'!__!' | append:variant.options[index] | append:'!__!:' | append:img_url  | append:'<>' %}
+                {% endunless %}
+            {% endif %}
+        {% endfor %}
+        {% assign option_names = option_names | split:'<>' | uniq %}
+        {% assign color_image = color_image | split:'<>' | uniq %}
+        <div class="product-size {{ product_options }} option-{{ option | handle }}">
+            <span class="option-label">{{ option }}:</span>
+            <div class="select-wrapper-sm">
+                <select class="form-control input-sm size-variants">
+                    {% for name in option_names %}
+                        <option {% if selected_value == name %}selected="selected"{% endif %} value="{{ name | handle | downcase | escape }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if settings.product_options == 'swatches' %}
+                <ul class="{% if option_title contains 'color' %}color-list{% else %}size-list{% endif %}" data-index="{{ forloop.index0 }}" {% if option contains 'Size' %}data-sort='{{ option_names | json }}'{% endif %}>
+                    {% for name in color_image %}
+                        {% assign title = name | split:':' | first | replace:'!__!','' %}
+                        {% assign img_src = name | split:':' | last %}
+                        <li  {% if selected_value == title %}class="active"{% endif %}>
+                            {% if option_title contains 'color' %}<a href="#" data-tooltip="{{ title }}" data-placement="top" title="{{ title }}" data-value="{{ title | handle | escape }}" data-image="{{ img_src }}"><span class="value"><img src="{% if settings.product_previews_colors_variants %}{{ img_src }}{% else %}{{ title | handle | prepend:'color-' | append: '.png' | file_url | downcase }}{% endif %}" alt=""></span></a>{% else %}<a href="#" data-value='{{ title | handle | downcase | escape }}'><span class="value">{{ title | escape }}</span></a>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endfor %}
+    {% endunless %}
+
+
+    <script>
+        var product_options_{{ product.id }} = [];
+        {% assign options = product.options %}
+        {% for option in options %}
+        {% assign option_index = forloop.index0 %}
+        {% for variant in product.variants %}
+        {% if variant.available %}
+        {% assign params = variant.options %}
+        product_options_{{ product.id }}{% for name in params %}{% if forloop.index0 > option_index  %}{% continue %}{% endif %}['{{ params[forloop.index0]|handle|strip|downcase}}']{% endfor %}=[];
+        {% endif %}
+        {% endfor %}
+        {% endfor %}
+
+
+        {% for variant in product.variants %}
+        {% if variant.available %}
+        {% assign attributes = 'price,compare_at_price,id,image,inventory_quantity,inventory_management,inventory_policy,sku' | split:',' %}
+        {% for attribute in attributes %}
+        product_options_{{ product.id }}{% for option in variant.options %}['{{ variant.options[forloop.index0] |handle|strip|downcase }}']{% endfor %}['{{ attribute|downcase }}']='{% if attribute == 'image'%}{% unless variant.image.src contains 'products' %}{{ product.featured_image |  img_url: '1024x1024' }}{% else %}{{ variant.image.src |  img_url: '1024x1024' }}{% endunless %}{% else %}{{ variant[attribute] }}{% endif %}';
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+    </script>
+    {% if design == 'creative' %}</div>{% endif %}
+
+
+{% if product.available %}
+    <div class="product-qty">
+        <span class="option-label">{{ 'products.product.quantity' | t }}:</span>
+        <div class="qty qty-changer">
+            <fieldset>
+                <input type="button" value="&#x2212;" class="decrease">
+                <input type="text" class="qty-input" name="quantity" value="1" data-min="1" {% if product.selected_or_first_available_variant.inventory_management == "shopify" and product.selected_or_first_available_variant.inventory_quantity > 0 and product.selected_or_first_available_variant.inventory_policy == 'deny' %}data-max="{{ product.selected_or_first_available_variant.inventory_quantity }}"{% endif %}>
+                <input type="button" value="+" class="increase"> <span class="{% unless product.selected_or_first_available_variant.inventory_management == "shopify" and product.selected_or_first_available_variant.inventory_quantity > 0 and product.selected_or_first_available_variant.inventory_policy == 'deny'  %}hidden{% endunless %} stock-dynamic">{% if settings.product_inventory_count %}max <b>{% if product.selected_or_first_available_variant.inventory_management == "shopify" and product.selected_or_first_available_variant.inventory_quantity > 0 %}{{ product.selected_or_first_available_variant.inventory_quantity }}{% endif %}</b> {{ 'general.theme.itemss' | t }}{% endif %}</span>
+            </fieldset>
+        </div>
+    </div>
+{% endif %}
+{% if design == 'default' %}</div>{% endif %}
+
+<script>
+    {% if product.available %}
+    $options_{{ product.id }}=$('.product-options.id_{{ product.id }}');
+    $select_{{ product.id }}=$('select',$options_{{ product.id }});
+    $ul_{{ product.id }}=$('ul',$options_{{ product.id }});
+    function updateSelectOptionsDisabling(){
+        $('option',$select_{{ product.id }}.not(':first')).attr("disabled","disabled");
+        for(a in product_options_{{ product.id }}[$select_{{ product.id }}.first().val()]){
+            $('option[value='+a+']',$select_{{ product.id }}).removeAttr("disabled","disabled");
+            for(b in product_options_{{ product.id }}[$select_{{ product.id }}.first().val()][a]){
+                $('option[value='+b+']',$select_{{ product.id }}).removeAttr("disabled","disabled");
+            }
+        }
+    }
+    function updateListOptionsDisabling(){
+        for(a in product_options_{{ product.id }}[$('li.active a',$ul_{{ product.id }}.first()).data('value')]){
+            $('a[data-value='+a+']',$ul_{{ product.id }}).parent().removeClass("absent-option");
+            for(b in product_options_{{ product.id }}[$('li.active a',$ul_{{ product.id }}.first()).data('value')][a]){
+                $('a[data-value='+b+']',$ul_{{ product.id }}).parent().removeClass("absent-option");
+            }
+        }
+    }
+
+    function currencyUpdate(){
+        Currency.convertAll(shopCurrency, jQuery('.selected-currency').text());
+    }
+
+    $(function($) {
+        {% unless product_options == 'swatches' %}updateSelectOptionsDisabling();{% endunless %}
+        $select_{{ product.id }}.first().addClass('first');
+        $ul_{{ product.id }}.first().addClass('first');
+        $select_{{ product.id }}.change(function(){
+            {% unless product_options == 'swatches' %}updateSelectOptionsDisabling();{% endunless %}
+            if($(this).hasClass('first'))
+            {
+                for (var first_option_to_select in product_options_{{ product.id }}[$select_{{ product.id }}.first().val()])break;
+                $('option',$select_{{ product.id }}.not(':first')).removeAttr("selected");
+                $('option[value='+first_option_to_select+']',$select_{{ product.id }}.not(':first')).attr("selected","selected");
+            }
+            updateData('select',{{ product.id }},$options_{{ product.id }});
+            Currency.convertAll('{{ shop.currency }}', Currency.cookie.read());
+        })
+        {% if product_options == 'swatches' %}
+
+        function setFixedAbsent(){
+            $('li',$ul_{{ product.id }}).addClass("absent-option");
+            $('li',$ul_{{ product.id }}.first()).removeClass('absent-option');
+            first_active=$('li.active a',$ul_{{ product.id }}.first()).data('value');
+            $('a',$ul_{{ product.id }}).each(function(){
+                val=$(this).data('value');
+                if($(this).closest('ul').data('index')!=0)
+                    for (b in product_options_{{ product.id }}[first_active])
+                        for (c in product_options_{{ product.id }}[first_active][b])
+                        {
+                            switch($(this).closest('ul').data('index')) {
+                                case 1:
+                                    if(product_options_{{ product.id }}[first_active]!=undefined && product_options_{{ product.id }}[first_active][val]!=undefined)
+                                        $('a[data-value='+val+']',$ul_{{ product.id }}).parent().removeClass('absent-option');
+                                    break;
+                                case 2:
+                                    if(product_options_{{ product.id }}[first_active]!=undefined && product_options_{{ product.id }}[first_active][b]!=undefined && product_options_{{ product.id }}[first_active][b][val]!=undefined)
+                                        $('a[data-value='+val+']',$ul_{{ product.id }}).parent().removeClass('absent-option');
+                            }
+                        }
+            })
+        }
+
+
+
+        $('a',$ul_{{ product.id }}).click(function(e){
+            $('li',$(this).parent().parent()).removeClass('active');
+            $('li.active.absent-option',$ul_{{ product.id }}).each(function(){
+                $(this).removeClass('active').siblings().not('.absent-option').first().addClass('active');
+            });
+            $(this).parent().addClass('active');
+            updateData('ul > li.active > a',{{ product.id }},$options_{{ product.id }});
+            Currency.convertAll('{{ shop.currency }}', Currency.cookie.read());
+            e.preventDefault();
+        })
+
+
+        $('a',$ul_{{ product.id }})
+                .mouseenter(function() {
+                    val=$(this).data('value');
+                    $('li',$ul_{{ product.id }}).addClass("absent-option");
+                    $(this).parent().removeClass('absent-option').siblings().removeClass('absent-option');
+                    for (a in product_options_{{ product.id }})
+                        for (b in product_options_{{ product.id }}[a])
+                            for (c in product_options_{{ product.id }}[a][b])
+                            {
+                                switch($(this).closest('ul').data('index')) {
+                                    case 0:
+                                        if(product_options_{{ product.id }}[val]!=undefined && product_options_{{ product.id }}[val][b]!=undefined && product_options_{{ product.id }}[val][b][c]!=undefined)
+                                            $('a[data-value='+b+'],a[data-value='+c+']',$ul_{{ product.id }}).parent().removeClass('absent-option');
+                                        break;
+                                    case 1:
+                                        if(product_options_{{ product.id }}[a]!=undefined && product_options_{{ product.id }}[a][val]!=undefined && product_options_{{ product.id }}[a][val][c]!=undefined)
+                                            $('a[data-value='+a+'],a[data-value='+c+']',$ul_{{ product.id }}).parent().removeClass('absent-option');
+                                        break;
+                                    default:
+                                        if(product_options_{{ product.id }}[a]!=undefined && product_options_{{ product.id }}[a][b]!=undefined && product_options_{{ product.id }}[a][b][val]!=undefined)
+                                            $('a[data-value='+a+'],a[data-value='+b+']',$ul_{{ product.id }}).parent().removeClass('absent-option');
+                                }
+                            }
+                })
+                .mouseleave(function() {
+                    $('li',$ul_{{ product.id }}).removeClass("absent-option");
+                    setFixedAbsent();
+                });
+
+        setFixedAbsent();
+        {% endif %}
+    });
+    {% endif %}
+</script>
