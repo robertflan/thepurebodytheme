@@ -13,7 +13,7 @@
 <script type="text/javascript">
     jQuery(function() {
         CartJS.init({{ cart | json }}, {
-            "dataAPI": false,
+            "dataAPI": true,
             "requestBodyClass": "loading",
             "moneyFormat": "{{ shop.money_format }}",
             "moneyWithCurrencyFormat": "{{ shop.money_with_currency_format }}"
