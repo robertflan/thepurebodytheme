@@ -41,3 +41,126 @@
 <script type="text/javascript">
     window.ch_redirect_logged_in = true;
 </script>
+<script>
+      //This is EXTFOX code for search
+      var wto;
+      jQuery('.header_search_form #search').keyup(function() {
+            
+            
+          clearTimeout(wto);
+          var tip = 'No results';
+          var keyword = this.value;
+          jQuery('.products_results').empty();
+          jQuery('.blogs_results').empty();
+          
+          var search_res = jQuery('.search_results');
+          if(search_res.hasClass('none') ) {
+              search_res.removeClass('none');
+              search_res.addClass('grid');
+          };
+
+
+          wto = setTimeout(function() {
+            
+            //get ctaegories id and handle for creatings link from blogs item
+            function get_categories(category) {
+              var categories_id = [];
+                jQuery.each( category, function( i, value ){
+                  
+                  categories_id.push({
+                    'id': category[i].id,
+                    'handle' : category[i].handle
+                  });
+
+                });
+
+                return categories_id;
+            }
+              
+    
+            jQuery.getJSON('/admin/blogs.json', function(item) {
+             
+                    var category = item.blogs;
+                    var categories = get_categories(category);
+                    
+              
+                    //get Blogs that has title matching withs search criteria
+                    jQuery.getJSON('/admin/articles.json', function(item) {
+                        var blogs = item.articles; 
+
+                        var articles = [];
+                        jQuery.each( blogs, function( i, value ){
+                    
+
+                              if(blogs[i].title.toUpperCase().indexOf(keyword.toUpperCase()) >= 0) {
+                                
+                                jQuery.each(categories, function(category_item, value) {
+                                  
+                                    if(blogs[i].blog_id == categories[category_item].id) {
+                                      
+                                      articles.push({
+                                        'blog_id': blogs[i].blog_id,
+                                        'blog_handle': categories[category_item].handle,
+                                        'handle' : blogs[i].handle,
+                                        'title': blogs[i].title,
+                                        'image' : blogs[i].image.src
+                                      });
+                                    }
+                                    
+                                });
+  
+
+                              } 
+
+                          });
+                          // foreach articles that matches with typed keyword create new element
+                          jQuery.each(articles, function(a, value) {
+                                jQuery('.blogs_results').append('<li class="blog_item_'+ a + '"><a href="/blogs/'+articles[a].blog_handle+'/'+articles[a].handle+'" class="blog_link_'+a+'"><div class="search_img"><img src="'+articles[a].image+'" id="blog_src_'+a+'"></div><div class="search_title">'+articles[a].title+'</div></a></li>');
+
+                                      if(keyword.length == 0) {
+                                          jQuery('.blogs_results').empty();
+
+                                      }
+                          });
+                          var count_blogs = jQuery('.blogs_results li').length;
+
+                          if(count_blogs == 0) {
+                                jQuery('.blogs_results').append('<div class="tip">'+tip+'</div>');
+                          }
+                       });
+                    
+                });
+          
+
+
+
+                //get Products that has title matching withs search criteria
+                jQuery.getJSON('/products.json', function(item) {
+                  var products = item.products; 
+
+                  jQuery.each( products, function( i, value ){
+
+                      if(products[i].title.toUpperCase().indexOf(keyword.toUpperCase()) >= 0) {
+                            console.log({{products.[i].url }});
+                          jQuery('.products_results').append('<li class="product_item_'+ i + '"><a href="/products/'+products[i].handle+'"" class="product_link_'+i+'"><div class="search_img"><img src="'+products[i].images[0].src+'" id="product_src_'+i+'"></div><div class="search_title">'+products[i].title+'</div></a></li>');
+
+                          if(keyword.length == 0) {
+
+                              jQuery('.products_results').empty();
+
+                          }
+                      } 
+
+                  });
+                  var count_products = jQuery('.products_results li').length;
+                  if(count_products == 0) {
+                        jQuery('.products_results').append('<div class="tip">'+tip+'</div>');
+                  }
+
+                });
+            
+            
+            
+            }, 500 );
+        }) ;
+    </script>
